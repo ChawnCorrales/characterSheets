@@ -39,6 +39,97 @@ function damageStep(roll, th, massiveRule=true){
   return {step:'none', hp:0};
 }
 
+// ---------- dropdown data & helpers ----------
+const OPTIONS = {
+  heritages: ['Aetherisk', 'Clank', 'Drakona', 'Dwarf', 'Earthkin', 'Elf', 'Emberkin', 'Faerie', 'Faun', 'Firbolg', 'Fungril', 'Galapa', 'Gnome', 'Goblin', 'Halfling', 'Human', 'Infernis', 'Katari', 'Orc', 'Ribbet', 'Simiah', 'Skykin', 'Tidekin'],
+  classes: {
+    Assassin:   ['Executioners Guild','Prisoners Guild'],
+    Bard: ['Troubador','Wordsmith'],
+    Brawler: ['Juggernaut','Martial Artist'],
+    Druid:  ['Warden of Renewal','Warden of the Elements'],
+    Guardian: ['Stalwart','Vengeance'],
+    Ranger: ['Beastbound', 'Wayfinder'],
+    Rogue: ['Nightwalker', 'Syndicate'],
+    Seraph: ['Divine Wielder', 'Winged Sentinel'],
+    Sorcerer: ['Elemental Origin', 'Primal Origin'],
+    Warlock: ['Pact of the Endless', 'Pact of the Wrathful'],
+    Warrior: ['Call of the Brave', 'Call of the Slayer'],
+    Witch: ['Hedge', 'Moon'],
+    Wizard: ['School of Knowledge', 'School of War']
+  }
+};
+
+function fillSelect(sel, items, placeholder='Select…') {
+  const opts = [
+    `<option value="" disabled selected>${placeholder}</option>`,
+    ...items.map(v => `<option value="${esc(v)}">${esc(v)}</option>`),
+    `<option value="__custom">Custom…</option>`
+  ];
+  sel.innerHTML = opts.join('');
+}
+
+function handleCustomSelect(sel, addToArray) {
+  if (sel.value === '__custom') {
+    const val = prompt('Enter custom value:','')?.trim();
+    if (val) {
+      // Add into the select immediately
+      const opt = new Option(val, val, true, true);
+      sel.add(opt);
+      sel.value = val;
+      // Optionally remember it in memory for this session
+      if (addToArray && !addToArray.includes(val)) addToArray.push(val);
+    } else {
+      sel.value = '';
+    }
+  }
+}
+
+function setupDropdowns(){
+  const heritageEl = document.getElementById('heritage');
+  const klassEl    = document.getElementById('klass');
+  const subEl      = document.getElementById('subclass');
+
+  // bail out gracefully if the elements aren't present
+  if (!heritageEl || !klassEl || !subEl) {
+    console.warn('Dropdown elements not found. Check IDs in index.html.');
+    return;
+  }
+
+  fillSelect(heritageEl, OPTIONS.heritages, 'Heritage');
+  fillSelect(klassEl, Object.keys(OPTIONS.classes), 'Class');
+  fillSelect(subEl, [], 'Subclass');
+
+  klassEl.addEventListener('change', () => {
+    if (klassEl.value === '__custom') {
+      handleCustomSelect(klassEl, (OPTIONS.classes._custom ||= []));
+      fillSelect(subEl, [], 'Subclass');
+      return;
+    }
+    const list = OPTIONS.classes[klassEl.value] || [];
+    fillSelect(subEl, list, 'Subclass');
+  });
+
+  heritageEl.addEventListener('change', () =>
+    handleCustomSelect(heritageEl, OPTIONS.heritages)
+  );
+
+  subEl.addEventListener('change', () => {
+    const cls = klassEl.value;
+    const bucket =
+      (cls && OPTIONS.classes[cls]) ? OPTIONS.classes[cls]
+      : (OPTIONS.classes._custom ||= []);
+    handleCustomSelect(subEl, bucket);
+  });
+}
+
+// Run whether the script loads before or after DOMContentLoaded
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', setupDropdowns);
+} else {
+  setupDropdowns();
+}
+
+
 // ---------- render ----------
 function charCard(c){
   const t = c.thresholds || { major:'-', severe:'-' };
