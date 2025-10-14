@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Daggerheart Character Sheets</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="bar">
+    <div class="brand">🗡️ Daggerheart — Character Sheets</div>
+    <div class="actions">
+      <button id="exportJson" class="ghost">Export</button>
+      <button id="importJson" class="ghost">Import</button>
+      <input id="importFile" type="file" accept="application/json" style="display:none" />
+    </div>
+  </header>
+
+  <main class="wrap grid">
+    <!-- Left: Create / Edit Character -->
+    <section class="card">
+      <h2>Create Character</h2>
+      <form id="charForm" class="stack">
+        <div class="split">
+          <label class="stack">
+            <span class="small">Name</span>
+            <input name="name" placeholder="Name" required />
+          </label>
+          <label class="stack">
+            <span class="small">Pronouns</span>
+            <input name="pronouns" placeholder="they/them" />
+          </label>
+        </div>
+
+        <div class="split">
+          <label class="stack">
+            <span class="small">Heritage</span>
+            <input name="heritage" placeholder="Heritage" />
+          </label>
+          <label class="stack">
+            <span class="small">Class</span>
+            <input name="klass" placeholder="Class" />
+          </label>
+          <label class="stack">
+            <span class="small">Subclass</span>
+            <input name="subclass" placeholder="Subclass" />
+          </label>
+          <label class="stack">
+            <span class="small">Level</span>
+            <input name="level" type="number" min="1" value="1" />
+          </label>
+        </div>
+
+        <div class="split">
+          <label class="stack">
+            <span class="small">HP</span>
+            <input name="hp" type="number" min="1" value="10" />
+          </label>
+          <label class="stack">
+            <span class="small">Major Threshold</span>
+            <input name="tMajor" type="number" value="10" />
+          </label>
+          <label class="stack">
+            <span class="small">Severe Threshold</span>
+            <input name="tSevere" type="number" value="15" />
+          </label>
+        </div>
+
+        <div class="stack">
+          <span class="field-label">Attributes</span>
+          <div class="row">
+            <label class="stack smallgap"><span class="small">Agility</span><input name="agility"  type="number" value="0"></label>
+            <label class="stack smallgap"><span class="small">Strength</span><input name="strength" type="number" value="0"></label>
+            <label class="stack smallgap"><span class="small">Finesse</span><input name="finesse"  type="number" value="0"></label>
+            <label class="stack smallgap"><span class="small">Instinct</span><input name="instinct" type="number" value="0"></label>
+            <label class="stack smallgap"><span class="small">Presence</span><input name="presence" type="number" value="0"></label>
+            <label class="stack smallgap"><span class="small">Knowledge</span><input name="knowledge" type="number" value="0"></label>
+          </div>
+        </div>
+
+        <div class="row">
+          <button class="primary">Add Character</button>
+        </div>
+      </form>
+
+      <div class="sub" style="margin-top:6px">
+        Massive threshold is auto-calculated as 2× Severe. Damage steps are fixed (1/2/3/4).
+      </div>
+    </section>
+
+    <!-- Right: Characters list -->
+    <section class="card">
+      <h2>Characters</h2>
+      <div id="chars" class="list" style="margin-top:12px"></div>
+    </section>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>

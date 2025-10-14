@@ -1,0 +1,33 @@
+:root{--bg:#0b1020;--panel:#121a33;--muted:#93a1b1;--ink:#e5e7eb;--accent:#7dd3fc}
+*{box-sizing:border-box}
+body{margin:0;background:linear-gradient(160deg,#0b1020 0%,#0f172a 100%);color:var(--ink);font:16px/1.45 system-ui,Segoe UI,Roboto,Helvetica,Arial,sans-serif}
+.bar{display:flex;gap:12px;align-items:center;justify-content:space-between;padding:16px 20px;background:#0f172a;border-bottom:1px solid #1f2a4d}
+.brand{font-weight:700;letter-spacing:.3px}
+.wrap{max-width:1100px;margin:0 auto;padding:20px}
+.grid{display:grid;grid-template-columns:1.1fr .9fr;gap:16px}
+@media (max-width:1000px){.grid{grid-template-columns:1fr}}
+.card{background:var(--panel);border:1px solid #1f2a4d;border-radius:16px;box-shadow:0 10px 20px rgba(0,0,0,.2);padding:14px}
+h2{margin:6px 0 12px 0;font-size:18px}
+.row{display:flex;gap:8px;flex-wrap:wrap}
+.stack{display:flex;flex-direction:column;gap:8px}
+.split{display:flex;gap:10px}.split>*{flex:1}
+input,select,textarea,button{background:#0e1530;border:1px solid #26386b;border-radius:12px;color:var(--ink);padding:10px 12px}
+button{cursor:pointer}
+button.primary{background:linear-gradient(90deg,#2563eb,#06b6d4);border:none}
+button.ghost{background:transparent}
+.list{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px}
+.chip{padding:4px 8px;border-radius:999px;background:#0c1330;border:1px solid #20305f;color:#bcd}
+.sub{color:var(--muted);font-size:12px}
+.small{font-size:12px;color:#b7c3d4}
+.field-label{font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
+
+/* HP bar with color thresholds */
+.hpbar{height:8px;background:#111827;border-radius:999px;overflow:hidden;margin-top:6px}
+.hpbar>span{display:block;height:100%;width:0%;transition:width .16s linear}
+.hpbar>span.ok{background:#22c55e}     /* green  */
+.hpbar>span.yellow{background:#facc15} /* yellow */
+.hpbar>span.orange{background:#fb923c} /* orange */
+.hpbar>span.red{background:#ef4444}    /* red    */
+
+/* minor pills and buttons inside cards */
+.btn-sm{padding:6px 10px;font-size:12px;border-radius:10px}
