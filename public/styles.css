@@ -27,7 +27,18 @@ button.ghost{background:transparent}
 .hpbar>span.ok{background:#22c55e}     /* green  */
 .hpbar>span.yellow{background:#facc15} /* yellow */
 .hpbar>span.orange{background:#fb923c} /* orange */
-.hpbar>span.red{background:#ef4444}    /* red    */
+.hpbar>span.red{background:#5a0101}    /* red    */
 
 /* minor pills and buttons inside cards */
 .btn-sm{padding:6px 10px;font-size:12px;border-radius:10px}
+
+/* Armor slots UI */
+.slots { display:flex; gap:6px; flex-wrap:wrap; }
+.slot {
+  width:22px; height:22px; border-radius:6px;
+  background:#0c1330; border:1px solid #20305f;
+  display:inline-flex; align-items:center; justify-content:center;
+  user-select:none; cursor:pointer; font-size:12px;
+}
+.slot.used { background:#2a3359; border-color:#3d4a7d; opacity:.8; }
+.slot:hover { outline:1px solid #4f67a8; }

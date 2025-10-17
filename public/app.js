@@ -122,6 +122,43 @@ function setupDropdowns(){
   });
 }
 
+function armorSlotsUI(c){
+  const a = c.armor || { slots: 0, used: [] };
+  const usedCount = (a.used||[]).filter(Boolean).length;
+  const total = a.slots || 0;
+
+  const boxes = Array.from({ length: total }, (_, i) => {
+    const isUsed = !!a.used?.[i];
+    return `<span class="slot ${isUsed?'used':''}" title="${isUsed?'Spent':'Available'}"
+              onclick="toggleArmorSlot('${c.id}', ${i})">${isUsed?'•':''}</span>`;
+  }).join('') || `<span class="sub">None</span>`;
+
+  return `
+    <div>
+      <div class="sub">Armor — ${total - usedCount}/${total} available</div>
+      <div class="slots" style="margin-top:6px">${boxes}</div>
+      <div class="row" style="margin-top:6px">
+        <input id="armorSlots-${c.id}" type="number" min="0" value="${total}" class="btn-sm" style="width:100px" />
+        <button class="btn-sm" onclick="setArmorSlots('${c.id}')">Set</button>
+        <button class="btn-sm" onclick="resetArmor('${c.id}')">Reset</button>
+      </div>
+    </div>
+  `;
+}
+
+function spendArmorSteps(c, stepsToCancel){
+  if (!c.armor?.slots || stepsToCancel <= 0) return 0;
+  const used = Array.isArray(c.armor.used) ? c.armor.used : Array(c.armor.slots).fill(false);
+
+  let cancelled = 0;
+  for (let i = 0; i < used.length && cancelled < stepsToCancel; i++){
+    if (!used[i]) { used[i] = true; cancelled++; }
+  }
+  c.armor.used = used;
+  return cancelled; // number of steps soaked by armor
+}
+
+
 // Run whether the script loads before or after DOMContentLoaded
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', setupDropdowns);
@@ -165,14 +202,18 @@ function charCard(c){
 
       <!-- Simple damage roller (no armor in this app) -->
       <div class="row" style="margin-top:10px">
-        <input id="roll-${c.id}" type="number" placeholder="Damage roll" min="0" step="1" style="width:140px">
-        <label class="row" style="align-items:center;gap:6px">
-          <input id="mass-${c.id}" type="checkbox" checked>
-          <span class="small">Massive rule</span>
-        </label>
+      <input id="roll-${c.id}" type="number" placeholder="Damage roll" min="0" step="1" style="width:140px">
+        <label  class="row" style="align-items:center;gap:6px">
+       <input id="useArmor-${c.id}" type="checkbox" checked>
+      </label>
         <button class="btn-sm" onclick="applyCharDamage('${c.id}')">Apply</button>
         <input id="heal-${c.id}" type="number" class="btn-sm" style="width:100px" placeholder="Heal" min="1">
         <button class="btn-sm" onclick="healChar('${c.id}')">❤️ Heal</button>
+      </div>
+
+
+      <div style="margin-top:12px">
+        ${armorSlotsUI(c)}
       </div>
 
       <div style="margin-top:12px">
@@ -221,6 +262,11 @@ $('#charForm').onsubmit = (e)=>{
     thresholds: {
       major: Number(d.tMajor || 0),
       severe: Number(d.tSevere || 0),
+    },
+
+    armor: {
+      slots: Math.max(0, Number(d.armorSlots || 0)),
+      used: Array(Math.max(0, Number(d.armorSlots || 0))).fill(false)
     },
 
     attrs: {
@@ -295,20 +341,17 @@ window.editChar = (id)=>{
   render();
 };
 
-window.applyCharDamage = (id)=>{
-  const arr = load();
-  const c = arr.find(x=>x.id===id); if(!c) return;
+function spendArmorIfAvailable(c, amount){
+  if (!c.armor?.slots) return amount;
+  const used = c.armor.used || [];
+  let remain = amount;
 
-  const rollEl = document.getElementById(`roll-${id}`);
-  const massEl = document.getElementById(`mass-${id}`);
-  const roll = Number(rollEl?.value || 0);
-  const massiveRule = !!massEl?.checked;
-
-  const res = damageStep(roll, c.thresholds, massiveRule);
-  c.hp = Math.max(0, c.hp - res.hp);
-  save(arr);
-  render();
-};
+  for (let i=0; i<used.length && remain>0; i++){
+    if (!used[i]) { used[i] = true; remain--; }
+  }
+  c.armor.used = used;
+  return remain; // leftover damage goes to HP
+}
 
 window.healChar = (id)=>{
   const arr = load();
@@ -344,6 +387,69 @@ window.removeComp = (charId, compId)=>{
   c.companions = c.companions.filter(x=>x.id!==compId);
   save(arr); render();
 };
+
+window.toggleArmorSlot = (id, idx)=>{
+  const arr = load();
+  const c = arr.find(x=>x.id===id); if(!c) return;
+  if (!c.armor) c.armor = { slots: 0, used: [] };
+  if (!Array.isArray(c.armor.used)) c.armor.used = Array(c.armor.slots).fill(false);
+  if (idx < 0 || idx >= c.armor.slots) return;
+
+  c.armor.used[idx] = !c.armor.used[idx];
+  save(arr); render();
+};
+
+window.setArmorSlots = (id)=>{
+  const arr = load();
+  const c = arr.find(x=>x.id===id); if(!c) return;
+  const el = document.getElementById(`armorSlots-${id}`);
+  const n = Math.max(0, Number(el?.value || 0));
+
+  // Resize used array, preserving leftmost values
+  const prev = (c.armor?.used) || [];
+  const nextUsed = Array(n).fill(false);
+  for (let i=0; i<Math.min(prev.length, n); i++) nextUsed[i] = !!prev[i];
+
+  c.armor = { slots: n, used: nextUsed };
+  save(arr); render();
+};
+
+window.resetArmor = (id)=>{
+  const arr = load();
+  const c = arr.find(x=>x.id===id); if(!c) return;
+  const n = c.armor?.slots || 0;
+  c.armor = { slots: n, used: Array(n).fill(false) };
+  save(arr); render();
+};
+
+window.applyCharDamage = (id)=>{
+  const arr = load();
+  const c = arr.find(x=>x.id===id); if(!c) return;
+
+  const rollEl = document.getElementById(`roll-${id}`);
+  const massEl = document.getElementById(`mass-${id}`);
+  const useArmorEl = document.getElementById(`useArmor-${id}`);
+
+  const roll = Number(rollEl?.value || 0);
+  const massiveRule = !!massEl?.checked;
+  const useArmor = !!useArmorEl?.checked;
+
+  const res = damageStep(roll, c.thresholds, massiveRule); // {step, hp} where hp = steps
+
+  let stepsLeft = res.hp;
+  if (useArmor) {
+    const soaked = spendArmorSteps(c, stepsLeft);
+    stepsLeft = Math.max(0, stepsLeft - soaked);
+  }
+
+  // whatever steps remain convert 1:1 to HP lost
+  c.hp = Math.max(0, c.hp - stepsLeft);
+
+  save(arr);
+  render();
+};
+
+
 
 // ---------- export / import ----------
 $('#exportJson').onclick = ()=>{
